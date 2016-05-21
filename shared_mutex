@@ -290,6 +290,13 @@ public:
 
 namespace std {
 
+namespace details {
+
+template <typename T>
+inline void ignore(const T&) {};
+
+}
+
 class shared_mutex
 {
     typedef std::mutex              mutex_t;
@@ -312,7 +319,7 @@ public:
     ~shared_mutex()
     {
         std::lock_guard<mutex_t> _(mut_);
-        void(_);
+        details::ignore(_);
     }
 
     shared_mutex(const shared_mutex&) = delete;
@@ -332,7 +339,9 @@ public:
 
     bool try_lock()
     {
-        std::unique_lock<mutex_t> lk(mut_);
+        std::unique_lock<mutex_t> _(mut_);
+        details::ignore(_);
+        
         if (state_ == 0)
         {
             state_ = write_entered_;
@@ -353,6 +362,7 @@ public:
     void unlock()
     {
         std::lock_guard<mutex_t> _(mut_);
+        details::ignore(_);
         state_ = 0;
         gate1_.notify_all();
     }
@@ -371,7 +381,9 @@ public:
 
     bool try_lock_shared()
     {
-        std::unique_lock<mutex_t> lk(mut_);
+        std::unique_lock<mutex_t> _(mut_);
+        details::ignore(_);
+        
         count_t num_readers = state_ & n_readers_;
         if (!(state_ & write_entered_) && num_readers != n_readers_)
         {
@@ -397,6 +409,8 @@ public:
     void unlock_shared()
     {
         std::lock_guard<mutex_t> _(mut_);
+        details::ignore(_);
+        
         count_t num_readers = (state_ & n_readers_) - 1;
         state_ &= ~n_readers_;
         state_ |= num_readers;
@@ -497,7 +511,7 @@ public:
     ~upgrade_mutex()
     {
         std::lock_guard<mutex_t> _(mut_);
-        void(_);
+        details::ignore(_);
     }
 
     upgrade_mutex(const upgrade_mutex&) = delete;
@@ -517,7 +531,9 @@ public:
 
     bool try_lock()
     {
-        std::unique_lock<mutex_t> lk(mut_);
+        std::unique_lock<mutex_t> _(mut_);
+        details::ignore(_);
+        
         if (state_ == 0)
         {
             state_ = write_entered_;
@@ -538,7 +554,8 @@ public:
     void unlock()
     {
         std::lock_guard<mutex_t> _(mut_);
-        void(_);
+        details::ignore(_);
+        
         state_ = 0;
         gate1_.notify_all();
     }
@@ -557,7 +574,9 @@ public:
 
     bool try_lock_shared()
     {
-        std::unique_lock<mutex_t> lk(mut_);
+        std::unique_lock<mutex_t> _(mut_);
+        details::ignore(_);
+        
         count_t num_readers = state_ & n_readers_;
         if (!(state_ & write_entered_) && num_readers != n_readers_)
         {
@@ -583,6 +602,8 @@ public:
     void unlock_shared()
     {
         std::lock_guard<mutex_t> _(mut_);
+        details::ignore(_);
+        
         count_t num_readers = (state_ & n_readers_) - 1;
         state_ &= ~n_readers_;
         state_ |= num_readers;
@@ -613,7 +634,9 @@ public:
 
     bool try_lock_upgrade()
     {
-        std::unique_lock<mutex_t> lk(mut_);
+        std::unique_lock<mutex_t> _(mut_);
+        details::ignore(_);
+        
         count_t num_readers = state_ & n_readers_;
         if (!(state_ & (write_entered_ | upgradable_entered_))
             && num_readers != n_readers_)
@@ -642,6 +665,8 @@ public:
     {
         {
             std::lock_guard<mutex_t> _(mut_);
+            details::ignore(_);
+            
             count_t num_readers = (state_ & n_readers_) - 1;
             state_ &= ~(upgradable_entered_ | n_readers_);
             state_ |= num_readers;
@@ -653,7 +678,9 @@ public:
 
     bool try_unlock_shared_and_lock()
     {
-        std::unique_lock<mutex_t> lk(mut_);
+        std::unique_lock<mutex_t> _(mut_);
+        details::ignore(_);
+        
         if (state_ == 1)
         {
             state_ = write_entered_;
@@ -678,6 +705,8 @@ public:
     {
         {
             std::lock_guard<mutex_t> _(mut_);
+            details::ignore(_);
+            
             state_ = 1;
         }
         gate1_.notify_all();
@@ -687,7 +716,9 @@ public:
 
     bool try_unlock_shared_and_lock_upgrade()
     {
-        std::unique_lock<mutex_t> lk(mut_);
+        std::unique_lock<mutex_t> _(mut_);
+        details::ignore(_);
+        
         if (!(state_ & (write_entered_ | upgradable_entered_)))
         {
             state_ |= upgradable_entered_;
@@ -712,6 +743,8 @@ public:
     {
         {
             std::lock_guard<mutex_t> _(mut_);
+            details::ignore(_);
+            
             state_ &= ~upgradable_entered_;
         }
         gate1_.notify_all();
@@ -731,7 +764,9 @@ public:
 
     bool try_unlock_upgrade_and_lock()
     {
-        std::unique_lock<mutex_t> lk(mut_);
+        std::unique_lock<mutex_t> _(mut_);
+        details::ignore(_);
+        
         if (state_ == (upgradable_entered_ | 1))
         {
             state_ = write_entered_;
@@ -756,6 +791,8 @@ public:
     {
         {
             std::lock_guard<mutex_t> _(mut_);
+            details::ignore(_);
+            
             state_ = upgradable_entered_ | 1;
         }
         gate1_.notify_all();
